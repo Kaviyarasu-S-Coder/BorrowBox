@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    url: jdbc:h2:file:./data/borrowboxdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;AUTO_SERVER=TRUE
+    driverClassName: org.h2.Driver
+    username: sa
+    password: 
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+  cache:
+    type: simple # Uses in-memory concurrent map cache in dev if Redis is not running
+
+logging:
+  level:
+    root: INFO
+    com.borrowbox: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: INFO
