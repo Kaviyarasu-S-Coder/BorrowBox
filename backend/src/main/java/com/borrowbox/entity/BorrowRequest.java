@@ -66,6 +66,9 @@ public class BorrowRequest {
     @Column(name = "cancellation_reason", columnDefinition = "TEXT")
     private String cancellationReason;
 
+    @OneToOne(mappedBy = "borrowRequest", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private BorrowTransaction transaction;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
