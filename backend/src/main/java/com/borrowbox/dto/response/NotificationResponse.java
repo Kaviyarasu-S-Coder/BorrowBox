@@ -1,6 +1,7 @@
 package com.borrowbox.dto.response;
 
 import com.borrowbox.entity.NotificationType;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,6 +21,9 @@ public class NotificationResponse {
     private String message;
     private String linkUrl;
     private Long referenceId;
+
+    @JsonProperty("isRead")
     private boolean isRead;
+
     private LocalDateTime createdAt;
 }

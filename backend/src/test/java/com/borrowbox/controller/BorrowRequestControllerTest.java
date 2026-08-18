@@ -40,6 +40,9 @@ public class BorrowRequestControllerTest {
     private ObjectMapper objectMapper;
 
     @Autowired
+    private RatingRepository ratingRepository;
+
+    @Autowired
     private NotificationRepository notificationRepository;
 
     @Autowired
@@ -67,6 +70,7 @@ public class BorrowRequestControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        ratingRepository.deleteAll();
         notificationRepository.deleteAll();
         conditionRepository.deleteAll();
         transactionRepository.deleteAll();

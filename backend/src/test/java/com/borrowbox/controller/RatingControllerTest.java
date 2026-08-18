@@ -1,7 +1,6 @@
 package com.borrowbox.controller;
 
-import com.borrowbox.dto.request.ConfirmCodeDto;
-import com.borrowbox.dto.request.RecordConditionDto;
+import com.borrowbox.dto.request.CreateRatingDto;
 import com.borrowbox.dto.request.RegisterRequest;
 import com.borrowbox.entity.*;
 import com.borrowbox.repository.*;
@@ -19,7 +18,6 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -30,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("dev")
-public class TransactionControllerTest {
+public class RatingControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -63,10 +61,10 @@ public class TransactionControllerTest {
     private UserRepository userRepository;
 
     private Long transactionId;
+    private Long ownerId;
+    private Long borrowerId;
     private String ownerToken;
     private String borrowerToken;
-    private String pickupCode = "654321";
-    private String returnCode = "123456";
 
     @BeforeEach
     void setUp() throws Exception {
@@ -81,48 +79,50 @@ public class TransactionControllerTest {
 
         // 1. Category
         Category cat = Category.builder()
-                .name("Electronics")
-                .slug("electronics")
-                .icon("Cpu")
+                .name("Audio")
+                .slug("audio")
+                .icon("Headphones")
                 .isActive(true)
                 .build();
         cat = categoryRepository.save(cat);
 
         // 2. Owner
         RegisterRequest ownerReq = RegisterRequest.builder()
-                .email("txowner@borrowbox.test")
+                .email("rateowner@borrowbox.test")
                 .password("Password123!")
-                .fullName("Tx Owner")
+                .fullName("Rating Owner")
                 .build();
         MvcResult res1 = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(ownerReq)))
                 .andReturn();
         ownerToken = objectMapper.readTree(res1.getResponse().getContentAsString()).get("data").get("accessToken").asText();
-        User owner = userRepository.findByEmail("txowner@borrowbox.test").orElseThrow();
+        ownerId = objectMapper.readTree(res1.getResponse().getContentAsString()).get("data").get("user").get("id").asLong();
+        User owner = userRepository.findById(ownerId).orElseThrow();
 
         // 3. Borrower
         RegisterRequest borrowerReq = RegisterRequest.builder()
-                .email("txborrower@borrowbox.test")
+                .email("rateborrower@borrowbox.test")
                 .password("Password123!")
-                .fullName("Tx Borrower")
+                .fullName("Rating Borrower")
                 .build();
         MvcResult res2 = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(borrowerReq)))
                 .andReturn();
         borrowerToken = objectMapper.readTree(res2.getResponse().getContentAsString()).get("data").get("accessToken").asText();
-        User borrower = userRepository.findByEmail("txborrower@borrowbox.test").orElseThrow();
+        borrowerId = objectMapper.readTree(res2.getResponse().getContentAsString()).get("data").get("user").get("id").asLong();
+        User borrower = userRepository.findById(borrowerId).orElseThrow();
 
         // 4. Item
         Item item = Item.builder()
                 .owner(owner)
                 .category(cat)
-                .title("Drone 4K Quadcopter")
-                .description("High-end aerial photography drone.")
+                .title("Bose Noise Cancelling Headphones")
+                .description("Top grade studio headphones.")
                 .condition(ItemCondition.LIKE_NEW)
-                .depositAmount(BigDecimal.valueOf(5000))
-                .dailyRate(BigDecimal.valueOf(800))
+                .depositAmount(BigDecimal.valueOf(2000))
+                .dailyRate(BigDecimal.valueOf(300))
                 .minBorrowDays(1)
                 .maxBorrowDays(7)
                 .location("Indiranagar, Bangalore")
@@ -135,15 +135,15 @@ public class TransactionControllerTest {
                 .item(item)
                 .borrower(borrower)
                 .owner(owner)
-                .startDate(LocalDate.now().plusDays(1))
-                .endDate(LocalDate.now().plusDays(4))
+                .startDate(LocalDate.now().minusDays(5))
+                .endDate(LocalDate.now().minusDays(2))
                 .status(RequestStatus.ACCEPTED)
-                .purpose("Landscape video")
-                .message("Will fly carefully.")
+                .purpose("Podcast recording")
+                .message("Will use indoors only.")
                 .build();
         req = borrowRequestRepository.save(req);
 
-        // 6. Transaction
+        // 6. Completed Transaction
         BorrowTransaction tx = BorrowTransaction.builder()
                 .borrowRequest(req)
                 .item(item)
@@ -151,73 +151,48 @@ public class TransactionControllerTest {
                 .borrower(borrower)
                 .startDate(req.getStartDate())
                 .endDate(req.getEndDate())
-                .pickupCode(pickupCode)
-                .returnCode(returnCode)
+                .pickupCode("112233")
+                .returnCode("445566")
                 .depositHeld(item.getDepositAmount())
                 .handoverLocation(item.getLocation())
-                .status(TransactionStatus.UPCOMING)
+                .status(TransactionStatus.COMPLETED)
                 .build();
         tx = transactionRepository.save(tx);
         transactionId = tx.getId();
     }
 
     @Test
-    @DisplayName("Should execute full pickup -> condition log -> return lifecycle")
-    void testFullTransactionFlow() throws Exception {
-        // 1. Attempt pickup with wrong code -> 400 Bad Request
-        ConfirmCodeDto wrongCode = ConfirmCodeDto.builder()
-                .verificationCode("000000")
+    @DisplayName("Should submit rating and recompute recipient reputation score")
+    void testCreateRatingAndReputationRecompute() throws Exception {
+        CreateRatingDto ratingDto = CreateRatingDto.builder()
+                .transactionId(transactionId)
+                .rating(5)
+                .communicationRating(5)
+                .punctualityRating(5)
+                .conditionRating(5)
+                .review("Outstanding item and communicative owner!")
                 .build();
-        mockMvc.perform(post("/api/transactions/" + transactionId + "/pickup")
-                        .header("Authorization", "Bearer " + ownerToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(wrongCode)))
-                .andExpect(status().isBadRequest());
 
-        // 2. Confirm pickup with correct code -> status BORROWED
-        ConfirmCodeDto correctPickup = ConfirmCodeDto.builder()
-                .verificationCode(pickupCode)
-                .notes("Handed over drone with 2 batteries and charger.")
-                .build();
-        mockMvc.perform(post("/api/transactions/" + transactionId + "/pickup")
-                        .header("Authorization", "Bearer " + ownerToken)
+        // 1. Borrower rates Owner
+        mockMvc.perform(post("/api/ratings")
+                        .header("Authorization", "Bearer " + borrowerToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(correctPickup)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status", is("BORROWED")))
-                .andExpect(jsonPath("$.data.ownerPickupConfirmed", is(true)));
+                        .content(objectMapper.writeValueAsString(ratingDto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.rating", is(5)))
+                .andExpect(jsonPath("$.data.toUserName", is("Rating Owner")));
 
-        // 3. Record pickup condition snapshot
-        RecordConditionDto pickupCond = RecordConditionDto.builder()
-                .stage(ConditionStage.PICKUP)
-                .condition(ItemCondition.LIKE_NEW)
-                .notes("Drone pristine, propellers intact.")
-                .photoUrls(List.of("/uploads/drone_pickup_1.jpg"))
-                .build();
-        mockMvc.perform(post("/api/transactions/" + transactionId + "/condition")
-                        .header("Authorization", "Bearer " + ownerToken)
+        // 2. Prevent duplicate rating by borrower for same tx (409 Conflict)
+        mockMvc.perform(post("/api/ratings")
+                        .header("Authorization", "Bearer " + borrowerToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(pickupCond)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.stage", is("PICKUP")));
+                        .content(objectMapper.writeValueAsString(ratingDto)))
+                .andExpect(status().isConflict());
 
-        // 4. Confirm return with correct return code -> status COMPLETED
-        ConfirmCodeDto correctReturn = ConfirmCodeDto.builder()
-                .verificationCode(returnCode)
-                .notes("Returned in perfect shape!")
-                .build();
-        mockMvc.perform(post("/api/transactions/" + transactionId + "/return")
-                        .header("Authorization", "Bearer " + ownerToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(correctReturn)))
+        // 3. Fetch Owner public reviews
+        mockMvc.perform(get("/api/ratings/user/" + ownerId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status", is("COMPLETED")))
-                .andExpect(jsonPath("$.data.ownerReturnConfirmed", is(true)));
-
-        // 5. Verify transaction state
-        mockMvc.perform(get("/api/transactions/" + transactionId)
-                        .header("Authorization", "Bearer " + borrowerToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status", is("COMPLETED")));
+                .andExpect(jsonPath("$.data.content[0].rating", is(5)))
+                .andExpect(jsonPath("$.data.content[0].fromUserName", is("Rating Borrower")));
     }
 }

@@ -34,6 +34,9 @@ public class UserControllerTest {
     private ObjectMapper objectMapper;
 
     @Autowired
+    private RatingRepository ratingRepository;
+
+    @Autowired
     private NotificationRepository notificationRepository;
 
     @Autowired
@@ -53,6 +56,7 @@ public class UserControllerTest {
 
     @BeforeEach
     void setUp() {
+        ratingRepository.deleteAll();
         notificationRepository.deleteAll();
         conditionRepository.deleteAll();
         transactionRepository.deleteAll();
