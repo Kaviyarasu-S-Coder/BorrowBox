@@ -1,20 +1,15 @@
 package com.borrowbox.controller;
 
+import com.borrowbox.BaseIntegrationTest;
 import com.borrowbox.dto.request.RegisterRequest;
 import com.borrowbox.entity.NotificationType;
 import com.borrowbox.entity.User;
-import com.borrowbox.repository.*;
 import com.borrowbox.service.NotificationService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import static org.hamcrest.Matchers.hasSize;
@@ -25,54 +20,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("dev")
-public class NotificationControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+public class NotificationControllerTest extends BaseIntegrationTest {
 
     @Autowired
     private NotificationService notificationService;
-
-    @Autowired
-    private RatingRepository ratingRepository;
-
-    @Autowired
-    private NotificationRepository notificationRepository;
-
-    @Autowired
-    private TransactionConditionRepository conditionRepository;
-
-    @Autowired
-    private BorrowTransactionRepository transactionRepository;
-
-    @Autowired
-    private BorrowRequestRepository borrowRequestRepository;
-
-    @Autowired
-    private ItemRepository itemRepository;
-
-    @Autowired
-    private UserRepository userRepository;
 
     private String userToken;
     private Long notificationId;
 
     @BeforeEach
-    void setUp() throws Exception {
-        ratingRepository.deleteAll();
-        notificationRepository.deleteAll();
-        conditionRepository.deleteAll();
-        transactionRepository.deleteAll();
-        borrowRequestRepository.deleteAll();
-        itemRepository.deleteAll();
-        userRepository.deleteAll();
-
+    void setUpNotificationTest() throws Exception {
         RegisterRequest req1 = RegisterRequest.builder()
                 .email("notif1@borrowbox.test")
                 .password("Password123!")

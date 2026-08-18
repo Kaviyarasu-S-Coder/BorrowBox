@@ -1,5 +1,6 @@
 package com.borrowbox.controller;
 
+import com.borrowbox.BaseIntegrationTest;
 import com.borrowbox.dto.request.CreateBorrowRequestDto;
 import com.borrowbox.dto.request.RegisterRequest;
 import com.borrowbox.dto.request.RespondBorrowRequestDto;
@@ -7,61 +8,22 @@ import com.borrowbox.entity.Category;
 import com.borrowbox.entity.Item;
 import com.borrowbox.entity.ItemCondition;
 import com.borrowbox.entity.ItemStatus;
-import com.borrowbox.repository.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.hamcrest.Matchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("dev")
-public class BorrowRequestControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private RatingRepository ratingRepository;
-
-    @Autowired
-    private NotificationRepository notificationRepository;
-
-    @Autowired
-    private TransactionConditionRepository conditionRepository;
-
-    @Autowired
-    private BorrowTransactionRepository transactionRepository;
-
-    @Autowired
-    private BorrowRequestRepository borrowRequestRepository;
-
-    @Autowired
-    private ItemRepository itemRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private UserRepository userRepository;
+public class BorrowRequestControllerTest extends BaseIntegrationTest {
 
     private Long itemId;
     private String ownerToken;
@@ -69,16 +31,7 @@ public class BorrowRequestControllerTest {
     private String thirdPartyToken;
 
     @BeforeEach
-    void setUp() throws Exception {
-        ratingRepository.deleteAll();
-        notificationRepository.deleteAll();
-        conditionRepository.deleteAll();
-        transactionRepository.deleteAll();
-        borrowRequestRepository.deleteAll();
-        itemRepository.deleteAll();
-        categoryRepository.deleteAll();
-        userRepository.deleteAll();
-
+    void setUpBorrowRequest() throws Exception {
         // 1. Create Category
         Category cat = Category.builder()
                 .name("Outdoors")

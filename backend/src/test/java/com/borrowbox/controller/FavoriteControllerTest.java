@@ -1,21 +1,15 @@
 package com.borrowbox.controller;
 
+import com.borrowbox.BaseIntegrationTest;
 import com.borrowbox.dto.request.RegisterRequest;
 import com.borrowbox.entity.Category;
 import com.borrowbox.entity.Item;
 import com.borrowbox.entity.ItemCondition;
 import com.borrowbox.entity.ItemStatus;
-import com.borrowbox.repository.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
@@ -27,59 +21,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("dev")
-public class FavoriteControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private FavoriteRepository favoriteRepository;
-
-    @Autowired
-    private RatingRepository ratingRepository;
-
-    @Autowired
-    private NotificationRepository notificationRepository;
-
-    @Autowired
-    private TransactionConditionRepository conditionRepository;
-
-    @Autowired
-    private BorrowTransactionRepository transactionRepository;
-
-    @Autowired
-    private BorrowRequestRepository borrowRequestRepository;
-
-    @Autowired
-    private ItemRepository itemRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private UserRepository userRepository;
+public class FavoriteControllerTest extends BaseIntegrationTest {
 
     private Long itemId;
     private String userToken;
 
     @BeforeEach
-    void setUp() throws Exception {
-        favoriteRepository.deleteAll();
-        ratingRepository.deleteAll();
-        notificationRepository.deleteAll();
-        conditionRepository.deleteAll();
-        transactionRepository.deleteAll();
-        borrowRequestRepository.deleteAll();
-        itemRepository.deleteAll();
-        categoryRepository.deleteAll();
-        userRepository.deleteAll();
-
+    void setUpFavoriteTest() throws Exception {
         Category cat = Category.builder()
                 .name("Games")
                 .slug("games")

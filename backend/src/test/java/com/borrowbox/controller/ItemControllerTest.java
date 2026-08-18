@@ -1,21 +1,15 @@
 package com.borrowbox.controller;
 
+import com.borrowbox.BaseIntegrationTest;
 import com.borrowbox.dto.request.CreateItemRequest;
 import com.borrowbox.dto.request.RegisterRequest;
 import com.borrowbox.dto.request.UpdateItemRequest;
 import com.borrowbox.entity.Category;
 import com.borrowbox.entity.ItemCondition;
-import com.borrowbox.repository.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
@@ -25,56 +19,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("dev")
-public class ItemControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private RatingRepository ratingRepository;
-
-    @Autowired
-    private NotificationRepository notificationRepository;
-
-    @Autowired
-    private TransactionConditionRepository conditionRepository;
-
-    @Autowired
-    private BorrowTransactionRepository transactionRepository;
-
-    @Autowired
-    private BorrowRequestRepository borrowRequestRepository;
-
-    @Autowired
-    private ItemRepository itemRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private UserRepository userRepository;
+public class ItemControllerTest extends BaseIntegrationTest {
 
     private Long categoryId;
     private String user1Token;
     private String user2Token;
 
     @BeforeEach
-    void setUp() throws Exception {
-        ratingRepository.deleteAll();
-        notificationRepository.deleteAll();
-        conditionRepository.deleteAll();
-        transactionRepository.deleteAll();
-        borrowRequestRepository.deleteAll();
-        itemRepository.deleteAll();
-        categoryRepository.deleteAll();
-        userRepository.deleteAll();
-
+    void setUpItemTest() throws Exception {
         // 1. Create Category
         Category cat = Category.builder()
                 .name("Tools")
