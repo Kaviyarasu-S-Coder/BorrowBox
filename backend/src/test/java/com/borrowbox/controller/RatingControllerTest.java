@@ -37,6 +37,9 @@ public class RatingControllerTest {
     private ObjectMapper objectMapper;
 
     @Autowired
+    private FavoriteRepository favoriteRepository;
+
+    @Autowired
     private RatingRepository ratingRepository;
 
     @Autowired
@@ -68,6 +71,7 @@ public class RatingControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        favoriteRepository.deleteAll();
         ratingRepository.deleteAll();
         notificationRepository.deleteAll();
         conditionRepository.deleteAll();
