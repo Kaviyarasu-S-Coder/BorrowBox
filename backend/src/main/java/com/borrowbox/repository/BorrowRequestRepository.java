@@ -46,4 +46,7 @@ public interface BorrowRequestRepository extends JpaRepository<BorrowRequest, Lo
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+    @Query("SELECT r FROM BorrowRequest r WHERE r.status = 'PENDING' AND r.startDate < :today")
+    List<BorrowRequest> findExpiredPendingRequests(@Param("today") LocalDate today);
 }
