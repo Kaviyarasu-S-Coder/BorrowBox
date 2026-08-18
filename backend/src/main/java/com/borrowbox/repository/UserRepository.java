@@ -18,4 +18,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> findByIsActive(boolean isActive, Pageable pageable);
 
     long countByIsActive(boolean isActive);
+
+    long countByIsVerified(boolean isVerified);
 }

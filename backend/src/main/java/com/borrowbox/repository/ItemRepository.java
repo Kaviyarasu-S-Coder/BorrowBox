@@ -27,6 +27,8 @@ public interface ItemRepository extends JpaRepository<Item, Long>, JpaSpecificat
 
     long countByStatus(ItemStatus status);
 
+    long countByCategoryId(Long categoryId);
+
     long countByOwnerId(Long ownerId);
 
     @Query("SELECT i FROM Item i WHERE i.status = :status AND " +

@@ -51,4 +51,7 @@ public interface BorrowTransactionRepository extends JpaRepository<BorrowTransac
     long countByBorrowerIdAndStatus(Long borrowerId, TransactionStatus status);
 
     long countByOwnerIdAndStatus(Long ownerId, TransactionStatus status);
+
+    @Query("SELECT COALESCE(SUM(t.depositHeld), 0) FROM BorrowTransaction t WHERE t.status IN ('UPCOMING', 'READY_FOR_PICKUP', 'BORROWED', 'RETURN_PENDING', 'OVERDUE', 'DISPUTED')")
+    java.math.BigDecimal sumActiveDepositHeld();
 }
