@@ -1,12 +1,8 @@
 package com.borrowbox.controller;
 
-import com.borrowbox.dto.request.LoginRequest;
 import com.borrowbox.dto.request.RegisterRequest;
 import com.borrowbox.dto.request.UpdateProfileRequest;
-import com.borrowbox.repository.BorrowRequestRepository;
-import com.borrowbox.repository.BorrowTransactionRepository;
-import com.borrowbox.repository.ItemRepository;
-import com.borrowbox.repository.UserRepository;
+import com.borrowbox.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,8 +15,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import static org.hamcrest.Matchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -36,6 +34,12 @@ public class UserControllerTest {
     private ObjectMapper objectMapper;
 
     @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Autowired
+    private TransactionConditionRepository conditionRepository;
+
+    @Autowired
     private BorrowTransactionRepository transactionRepository;
 
     @Autowired
@@ -49,6 +53,8 @@ public class UserControllerTest {
 
     @BeforeEach
     void setUp() {
+        notificationRepository.deleteAll();
+        conditionRepository.deleteAll();
         transactionRepository.deleteAll();
         borrowRequestRepository.deleteAll();
         itemRepository.deleteAll();

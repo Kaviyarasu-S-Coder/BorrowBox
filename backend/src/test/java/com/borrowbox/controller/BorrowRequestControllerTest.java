@@ -40,6 +40,12 @@ public class BorrowRequestControllerTest {
     private ObjectMapper objectMapper;
 
     @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Autowired
+    private TransactionConditionRepository conditionRepository;
+
+    @Autowired
     private BorrowTransactionRepository transactionRepository;
 
     @Autowired
@@ -61,6 +67,8 @@ public class BorrowRequestControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        notificationRepository.deleteAll();
+        conditionRepository.deleteAll();
         transactionRepository.deleteAll();
         borrowRequestRepository.deleteAll();
         itemRepository.deleteAll();

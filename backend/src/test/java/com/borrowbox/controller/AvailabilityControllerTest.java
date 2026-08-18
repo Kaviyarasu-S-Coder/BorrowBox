@@ -29,6 +29,12 @@ public class AvailabilityControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Autowired
+    private TransactionConditionRepository conditionRepository;
+
+    @Autowired
     private BorrowTransactionRepository transactionRepository;
 
     @Autowired
@@ -47,6 +53,8 @@ public class AvailabilityControllerTest {
 
     @BeforeEach
     void setUp() {
+        notificationRepository.deleteAll();
+        conditionRepository.deleteAll();
         transactionRepository.deleteAll();
         borrowRequestRepository.deleteAll();
         itemRepository.deleteAll();

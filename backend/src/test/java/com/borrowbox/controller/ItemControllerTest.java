@@ -37,6 +37,12 @@ public class ItemControllerTest {
     private ObjectMapper objectMapper;
 
     @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Autowired
+    private TransactionConditionRepository conditionRepository;
+
+    @Autowired
     private BorrowTransactionRepository transactionRepository;
 
     @Autowired
@@ -57,6 +63,8 @@ public class ItemControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        notificationRepository.deleteAll();
+        conditionRepository.deleteAll();
         transactionRepository.deleteAll();
         borrowRequestRepository.deleteAll();
         itemRepository.deleteAll();
