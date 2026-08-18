@@ -2,6 +2,9 @@ package com.borrowbox.controller;
 
 import com.borrowbox.dto.request.LoginRequest;
 import com.borrowbox.dto.request.RegisterRequest;
+import com.borrowbox.repository.BorrowRequestRepository;
+import com.borrowbox.repository.BorrowTransactionRepository;
+import com.borrowbox.repository.ItemRepository;
 import com.borrowbox.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,10 +37,22 @@ public class AuthControllerTest {
     private ObjectMapper objectMapper;
 
     @Autowired
+    private BorrowTransactionRepository transactionRepository;
+
+    @Autowired
+    private BorrowRequestRepository borrowRequestRepository;
+
+    @Autowired
+    private ItemRepository itemRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     @BeforeEach
     void setUp() {
+        transactionRepository.deleteAll();
+        borrowRequestRepository.deleteAll();
+        itemRepository.deleteAll();
         userRepository.deleteAll();
     }
 

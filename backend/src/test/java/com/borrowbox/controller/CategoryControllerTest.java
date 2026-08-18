@@ -3,7 +3,10 @@ package com.borrowbox.controller;
 import com.borrowbox.dto.request.CategoryRequest;
 import com.borrowbox.dto.request.RegisterRequest;
 import com.borrowbox.entity.Category;
+import com.borrowbox.repository.BorrowRequestRepository;
+import com.borrowbox.repository.BorrowTransactionRepository;
 import com.borrowbox.repository.CategoryRepository;
+import com.borrowbox.repository.ItemRepository;
 import com.borrowbox.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +37,15 @@ public class CategoryControllerTest {
     private ObjectMapper objectMapper;
 
     @Autowired
+    private BorrowTransactionRepository transactionRepository;
+
+    @Autowired
+    private BorrowRequestRepository borrowRequestRepository;
+
+    @Autowired
+    private ItemRepository itemRepository;
+
+    @Autowired
     private CategoryRepository categoryRepository;
 
     @Autowired
@@ -41,6 +53,9 @@ public class CategoryControllerTest {
 
     @BeforeEach
     void setUp() {
+        transactionRepository.deleteAll();
+        borrowRequestRepository.deleteAll();
+        itemRepository.deleteAll();
         categoryRepository.deleteAll();
         userRepository.deleteAll();
     }
