@@ -5,9 +5,7 @@ import com.borrowbox.dto.request.RegisterRequest;
 import com.borrowbox.dto.request.UpdateItemRequest;
 import com.borrowbox.entity.Category;
 import com.borrowbox.entity.ItemCondition;
-import com.borrowbox.repository.CategoryRepository;
-import com.borrowbox.repository.ItemRepository;
-import com.borrowbox.repository.UserRepository;
+import com.borrowbox.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -39,6 +37,12 @@ public class ItemControllerTest {
     private ObjectMapper objectMapper;
 
     @Autowired
+    private BorrowTransactionRepository transactionRepository;
+
+    @Autowired
+    private BorrowRequestRepository borrowRequestRepository;
+
+    @Autowired
     private ItemRepository itemRepository;
 
     @Autowired
@@ -53,6 +57,8 @@ public class ItemControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        transactionRepository.deleteAll();
+        borrowRequestRepository.deleteAll();
         itemRepository.deleteAll();
         categoryRepository.deleteAll();
         userRepository.deleteAll();
@@ -125,6 +131,41 @@ public class ItemControllerTest {
                 .andExpect(jsonPath("$.data.title", is("Bosch Hammer Drill 500W")))
                 .andExpect(jsonPath("$.data.ownerName", is("User One")))
                 .andExpect(jsonPath("$.data.viewCount", is(1)));
+    }
+
+    @Test
+    @DisplayName("Should search items with query and category filter")
+    void testSearchAndFilterItems() throws Exception {
+        CreateItemRequest item1 = CreateItemRequest.builder()
+                .title("Makita Cordless Impact Driver")
+                .categoryId(categoryId)
+                .description("High-torque impact driver.")
+                .condition(ItemCondition.NEW)
+                .depositAmount(BigDecimal.valueOf(1000))
+                .location("Indiranagar, Bangalore")
+                .build();
+
+        mockMvc.perform(post("/api/items")
+                        .header("Authorization", "Bearer " + user1Token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(item1)))
+                .andExpect(status().isCreated());
+
+        // Search by query "impact"
+        mockMvc.perform(get("/api/items?query=impact"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content", hasSize(1)))
+                .andExpect(jsonPath("$.data.content[0].title", is("Makita Cordless Impact Driver")));
+
+        // Search by category slug "tools"
+        mockMvc.perform(get("/api/items?categorySlug=tools"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content", hasSize(1)));
+
+        // Discovery featured
+        mockMvc.perform(get("/api/items/featured/recent"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", hasSize(1)));
     }
 
     @Test

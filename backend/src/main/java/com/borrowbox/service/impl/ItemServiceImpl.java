@@ -1,6 +1,7 @@
 package com.borrowbox.service.impl;
 
 import com.borrowbox.dto.request.CreateItemRequest;
+import com.borrowbox.dto.request.ItemFilterCriteria;
 import com.borrowbox.dto.request.UpdateItemRequest;
 import com.borrowbox.dto.response.ItemImageResponse;
 import com.borrowbox.dto.response.ItemResponse;
@@ -17,8 +18,10 @@ import com.borrowbox.service.ItemService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -77,7 +80,6 @@ public class ItemServiceImpl implements ItemService {
 
         Item savedItem = itemRepository.save(item);
 
-        // Add initial images if provided
         if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
             for (int i = 0; i < request.getImageUrls().size(); i++) {
                 ItemImage image = ItemImage.builder()
@@ -138,7 +140,6 @@ public class ItemServiceImpl implements ItemService {
 
         validateOwnershipOrAdmin(currentUser, item);
 
-        // Check if there are active transactions for this item
         List<TransactionStatus> activeStatuses = Arrays.asList(
                 TransactionStatus.UPCOMING,
                 TransactionStatus.READY_FOR_PICKUP,
@@ -151,7 +152,6 @@ public class ItemServiceImpl implements ItemService {
             throw new BadRequestException("Cannot delete item with active or upcoming borrow bookings. Please complete or cancel bookings first.");
         }
 
-        // Soft delete / mark inactive
         item.setStatus(ItemStatus.INACTIVE);
         itemRepository.save(item);
         log.info("Deactivated item ID={}", itemId);
@@ -163,7 +163,6 @@ public class ItemServiceImpl implements ItemService {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item", "id", itemId));
 
-        // Increment view count asynchronously/in transaction
         item.setViewCount(item.getViewCount() + 1);
         itemRepository.save(item);
 
@@ -179,6 +178,34 @@ public class ItemServiceImpl implements ItemService {
 
         return itemRepository.findByOwnerId(currentUser.getId(), pageable)
                 .map(this::mapToSummary);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ItemSummaryResponse> searchItems(ItemFilterCriteria criteria, Pageable pageable) {
+        Specification<Item> spec = ItemSpecification.withFilters(criteria);
+        return itemRepository.findAll(spec, pageable)
+                .map(this::mapToSummary);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @Cacheable(value = "items", key = "'recently_listed'")
+    public List<ItemSummaryResponse> getRecentlyListedItems() {
+        return itemRepository.findTop8ByStatusOrderByCreatedAtDesc(ItemStatus.AVAILABLE)
+                .stream()
+                .map(this::mapToSummary)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @Cacheable(value = "items", key = "'popular'")
+    public List<ItemSummaryResponse> getPopularItems() {
+        return itemRepository.findTop8ByStatusOrderByBorrowCountDesc(ItemStatus.AVAILABLE)
+                .stream()
+                .map(this::mapToSummary)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -227,7 +254,6 @@ public class ItemServiceImpl implements ItemService {
         item.getImages().remove(image);
         itemImageRepository.delete(image);
 
-        // If removed image was primary and others exist, set first remaining as primary
         if (image.isPrimary() && !item.getImages().isEmpty()) {
             item.getImages().get(0).setPrimary(true);
         }

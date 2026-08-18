@@ -1,6 +1,7 @@
 package com.borrowbox.controller;
 
 import com.borrowbox.dto.request.CreateItemRequest;
+import com.borrowbox.dto.request.ItemFilterCriteria;
 import com.borrowbox.dto.request.UpdateItemRequest;
 import com.borrowbox.dto.response.ApiResponse;
 import com.borrowbox.dto.response.ItemResponse;
@@ -22,13 +23,39 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/items")
 @RequiredArgsConstructor
-@Tag(name = "Item Listing", description = "Endpoints for creating, managing, and viewing item listings")
+@Tag(name = "Item Listing & Discovery", description = "Endpoints for searching, discovering, and managing items")
 public class ItemController {
 
     private final ItemService itemService;
+
+    @GetMapping
+    @Operation(summary = "Search & filter items", description = "Dynamic multi-criteria search with category, condition, price/deposit, location, and pagination.")
+    public ResponseEntity<ApiResponse<Page<ItemSummaryResponse>>> searchItems(
+            @ModelAttribute ItemFilterCriteria criteria,
+            @PageableDefault(size = 12, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<ItemSummaryResponse> items = itemService.searchItems(criteria, pageable);
+        return ResponseEntity.ok(ApiResponse.success(items));
+    }
+
+    @GetMapping("/featured/recent")
+    @Operation(summary = "Get recently listed items", description = "Returns top 8 newest available items for homepage discovery.")
+    public ResponseEntity<ApiResponse<List<ItemSummaryResponse>>> getRecentlyListedItems() {
+        List<ItemSummaryResponse> items = itemService.getRecentlyListedItems();
+        return ResponseEntity.ok(ApiResponse.success(items));
+    }
+
+    @GetMapping("/featured/popular")
+    @Operation(summary = "Get popular items", description = "Returns top 8 most borrowed items for trending discovery.")
+    public ResponseEntity<ApiResponse<List<ItemSummaryResponse>>> getPopularItems() {
+        List<ItemSummaryResponse> items = itemService.getPopularItems();
+        return ResponseEntity.ok(ApiResponse.success(items));
+    }
 
     @PostMapping
     @Operation(summary = "Create a new item listing", description = "Lists an item for borrowing with conditions, deposits, and rules.")
