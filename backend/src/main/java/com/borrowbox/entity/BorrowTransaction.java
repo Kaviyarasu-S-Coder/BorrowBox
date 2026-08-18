@@ -99,6 +99,10 @@ public class BorrowTransaction {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private java.util.List<TransactionCondition> conditions = new java.util.ArrayList<>();
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
