@@ -1,0 +1,110 @@
+services:
+  # ==============================================================================
+  # PostgreSQL 16 Database
+  # ==============================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: borrowbox-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-borrowboxdb}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-borrowboxdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - borrowbox-network
+
+  # ==============================================================================
+  # Redis 7 Cache Layer
+  # ==============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: borrowbox-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - borrowbox-network
+
+  # ==============================================================================
+  # Spring Boot 3 Backend API
+  # ==============================================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: borrowbox-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-borrowboxdb}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      APP_JWT_SECRET: ${JWT_SECRET:-9a786bc64919bc83a21bb013f9f7832626e5a6a4f913d80d2871f76d93333333}
+      APP_JWT_EXPIRATION_MS: 86400000
+      APP_UPLOAD_DIR: /app/uploads/items
+    ports:
+      - "8080:8080"
+    volumes:
+      - item_uploads:/app/uploads/items
+    networks:
+      - borrowbox-network
+
+  # ==============================================================================
+  # React 18 + Vite Frontend (Nginx)
+  # ==============================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: borrowbox-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "3000:80"
+    networks:
+      - borrowbox-network
+
+# ==============================================================================
+# Persistent Storage Volumes
+# ==============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  item_uploads:
+    driver: local
+
+# ==============================================================================
+# Isolated Bridge Network
+# ==============================================================================
+networks:
+  borrowbox-network:
+    driver: bridge
