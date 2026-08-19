@@ -13,11 +13,12 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791.svg?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
 [![Redis](https://img.shields.io/badge/Redis-7-DC382D.svg?style=flat-square&logo=redis)](https://redis.io/)
 [![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED.svg?style=flat-square&logo=docker)](https://www.docker.com/)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployed-black.svg?style=flat-square&logo=vercel)](https://vercel.com/)
 [![License MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
 **BorrowBox** is a modern, peer-to-peer neighborhood gear-sharing and lending platform that empowers communities to temporarily borrow high-value equipment—such as power tools, cameras, camping gear, and audiovisual systems—safely and cost-effectively.
 
-[Explore Features](#-key-features) • [System Architecture](#-system-architecture) • [Quick Start](#-quick-start) • [Demo Accounts](#-demo-accounts) • [API Catalog](#-rest--websocket-api-catalog)
+[Explore Features](#-key-features) • [System Architecture](#-system-architecture) • [Quick Start](#-quick-start) • [Deploy on Vercel](#-deploy-to-vercel) • [Demo Accounts](#-demo-accounts) • [API Catalog](#-rest--websocket-api-catalog)
 
 </div>
 
@@ -144,6 +145,23 @@ npm install
 npm run dev
 ```
 *Frontend runs on `http://localhost:5173` with Vite HMR.*
+
+---
+
+## ⚡ Deploy to Vercel
+
+The BorrowBox frontend is pre-configured with `vercel.json` for single-click deployment and full SPA routing.
+
+### Quick Setup:
+1. Go to **[Vercel Dashboard](https://vercel.com/new)** and import **`Kaviyarasu-S-Coder/BorrowBox`**.
+2. Set **Root Directory**: `frontend` (or leave default root, both are supported).
+3. Under **Environment Variables**, add:
+   ```env
+   VITE_API_URL=https://your-backend-api-domain.com/api
+   ```
+4. Click **Deploy**.
+
+For detailed setup instructions on connecting the PostgreSQL/Redis backend and setting custom domains, see the [Vercel Deployment Guide](docs/VERCEL_DEPLOYMENT_GUIDE.md).
 
 ---
 
