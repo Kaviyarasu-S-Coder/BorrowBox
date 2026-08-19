@@ -1,0 +1,22 @@
+services:
+  # ============================================================================
+  # Spring Boot 3 Backend Web Service
+  # ============================================================================
+  - type: web
+    name: borrowbox-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: singapore
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: dev
+      - key: APP_JWT_SECRET
+        generateValue: true
+      - key: APP_JWT_EXPIRATION_MS
+        value: "86400000"
+      - key: PORT
+        value: "8080"
+      - key: APP_UPLOAD_DIR
+        value: "/app/uploads/items"
